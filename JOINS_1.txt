@@ -69,3 +69,36 @@ WHERE t.spelersnr = '6'
 
 -----
 
+opgave:
+Geef alle spelers die geen enkele wedstrijd voor team 1 hebben gespeeld. Sorteer op naam, daarna op spelersnr.
+output:
+spelersnr	naam
+112	Baalen, van
+39	Bischoff
+27	Cools
+28	Cools
+95	Meuleman
+104	Moerman
+100	Permentier
+7	Wijers
+
+SELECT spelersnr, naam
+FROM spelers
+WHERE spelersnr NOT IN (
+    SELECT spelersnr
+    FROM wedstrijden
+    WHERE teamnr = 1
+)
+ORDER BY naam, spelersnr
+
+------
+
+opgave:
+Maak een lijst met de spelers (naam van de speler, voorletter en woonplaats) die ooit gespeeld hebben voor een team dat nu in de tweede divisie speelt en waarvoor geen enkele boete betaald werd voor 1 januari 1981. Geen dubbels, sorteer van voor naar achter.
+output:
+naam	voorletters	plaats
+Baalen, van	IP	Rotterdam
+Cools	DD	Zoetermeer
+Moerman	D	Zoetermeer
+
+...
