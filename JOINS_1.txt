@@ -1,0 +1,49 @@
+opgave:
+Maak een lijst met alle spelers die ooit een boete gekregen hebben die hoger is dan 50 euro. Geen dubbels. Sorteer van voor naar achter.
+output:
+naam	voorletters	plaats
+Bakker, de	E	Rijswijk
+Cools	DD	Zoetermeer
+Permentier	R	Den Haag
+
+select distinct naam, voorletters, plaats
+from spelers inner join boetes using(spelersnr)
+where bedrag > 50
+order by 1,2,3
+
+-----
+
+opgave:
+Geef van elke boete het betalingsnr, het boetebedrag en het percentage dat het bedrag uitmaakt van de som van alle bedragen. Sorteer deze data op het betalingsnr. Zorg dat er maar twee getallen na de komma getoond worden (rond af). Sorteer van voor naar achter.
+output:
+betalingsnr	bedrag	round
+1	100.00	20.83
+2	75.00	15.63
+3	100.00	20.83
+4	50.00	10.42
+5	25.00	5.21
+6	25.00	5.21
+7	30.00	6.25
+8	75.00	15.63
+
+SELECT betalingsnr, bedrag, ROUND((bedrag / totaal_bedrag) * 100, 2) AS round
+FROM boetes,
+    (SELECT SUM(bedrag) AS totaal_bedrag FROM boetes) AS total
+ORDER BY betalingsnr ASC
+
+-----
+
+opgave:
+Geef chronologisch de bestuursleden die voorzitter zijn of geweest zijn (chronologisch op begindatum van het voorzitterschap) met vermelding van deze begindatum, alsook hun naam en huidig adres.
+Als het vollegie adres niet gekend is dan moet “adres ongekend” weergegeven worden. Sorteer van voor naar achter.
+output:
+begin_datum	naam	adres
+1990-01-01	Elfring	Steden 43 Den Haag 3575NH
+1993-01-01	Permentier	Hazensteinln 80 Den Haag 1234KK
+
+SELECT begin_datum, S.naam,  S.straat || ' ' || S.huisnr || ' ' || S.plaats || ' ' || S.postcode as adres
+FROM bestuursleden
+INNER JOIN spelers AS S USING(spelersnr)
+WHERE functie = 'Voorzitter'
+ORDER BY begin_datum
+
