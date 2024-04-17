@@ -1,0 +1,109 @@
+opgave:
+Geef het totaal aantal boetes, het totale boetebedrag, het minimum en het maximum boetebedrag dat door onze club betaald werd. Let er hierbij op dat er gehele getallen worden getoond (rond af indien nodig). Sorteer van voor naar achter, oplopend. Deze opgave behoeft geen subquery.
+output:
+aantal_boetes	totaal_bedrag	minimum	maximum
+8	480	25	100
+
+select count(*) as aantal_boetes, round(sum(bedrag)) as totaal_bedrag, round(min(bedrag)) as minimum, round(max(bedrag)) as maximum
+from boetes
+
+-----
+
+opgave:
+Geef voor elke aanvoerder het spelersnr, de naam en het aantal boetes dat voor hem of haar betaald is en het aantal teams dat hij of zij aanvoert. Toon enkel aanvoerders die boetes gekregen hebben. Sorteer van voor naar achter, oplopend.
+output:
+spelersnr	naam	voorletters	aantalboetes	aantalteams
+6	Permentier	R	1	1
+27	Cools	DD	2	1
+
+select spelersnr, naam, voorletters, aantalboetes, aantalteams
+from spelers
+       inner join (select count(*) as aantalboetes, spelersnr from boetes group by spelersnr) as t using (spelersnr)
+       inner join (select count(*) as aantalteams, spelersnr from teams group by spelersnr) as u using(spelersnr)
+order by 1,2,3,4
+
+-----
+
+opgave:
+Geef een lijst met het spelersnummer en de naam van de spelers die in Rijswijk wonen en die in 1980 een boete gekregen hebben van 25 euro (meerdere voorwaarden dus). Gebruik hiervoor geen exists operator maar wel zijn tegenhanger die meestal bij niet-gecorreleerde subquery's wordt gebruikt. Sorteer van voor naar achter, oplopend.
+output:
+spelersnr	naam
+8	Niewenburg
+44	Bakker, de
+
+SELECT spelersnr, naam
+FROM spelers
+WHERE plaats = 'Rijswijk'
+AND spelersnr IN (
+    SELECT spelersnr
+    FROM boetes
+    WHERE bedrag = 25
+    AND EXTRACT(YEAR FROM datum) = 1980
+)
+ORDER BY spelersnr;
+
+-----
+
+opgave:
+Geef alle spelers voor wie meer boetes zijn betaald dan dat ze wedstrijden hebben gespeeld. Zorg dat spelers zonder wedstrijd ook getoond worden.
+Sorteer van voor naar achter, oplopend.
+output:
+naam	voorletters	geb_datum
+Bakker, de	E	1963-01-09
+Cools	DD	1964-12-28
+
+SELECT s.naam, s.voorletters, s.geb_datum
+FROM spelers s
+LEFT JOIN (SELECT spelersnr, COUNT(*) AS aantalboetes FROM boetes GROUP BY spelersnr) AS b ON s.spelersnr = b.spelersnr
+LEFT JOIN (SELECT spelersnr, COUNT(*) AS aantalwedstrijden FROM wedstrijden GROUP BY spelersnr) AS w ON s.spelersnr = w.spelersnr
+WHERE COALESCE(b.aantalboetes, 0) > COALESCE(w.aantalwedstrijden, 0)
+-- COALESCE return the first value with null, if there is nothing that has null then it will return null
+ORDER BY s.naam ASC, s.voorletters ASC, s.geb_datum ASC
+
+-----
+
+Geef alle spelers die geen wedstrijd voor team 1 heeft gespeeld. Sorteer op naam, daarna op nr.
+output:
+spelersnr	naam
+112	Baalen, van
+39	Bischoff
+27	Cools
+28	Cools
+95	Meuleman
+104	Moerman
+100	Permentier
+7	Wijers
+
+SELECT spelersnr, naam
+FROM spelers
+WHERE spelersnr NOT IN (
+    SELECT spelersnr
+    FROM wedstrijden
+    WHERE teamnr = 1
+)
+ORDER BY naam, spelersnr
+-- this is the same exercise as in joins 1 but I will use a subquerry now
+
+-----
+
+opgave:
+Geef voor elke speler die ooit een boete heeft betaald, de hoogste boete weer en hoelang het geleden is dat deze boete werd betaald. Sorteer van groot naar klein op bedrag en daarna omgekeerd op “leeftijd..” van de boete.
+output:
+spelersnr	bedrag	age
+27	100.00	40 years 7 mons 6 days
+6	100.00	43 years 4 mons 8 days
+44	75.00	42 years 11 mons 11 days
+104	50.00	39 years 4 mons 8 days
+8	25.00	43 years 4 mons 8 days
+
+THIS SOLUTION IS WRONG! The calculation is not right yet!
+
+SELECT b.spelersnr, MAX(b.bedrag) AS bedrag, 
+    EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM MAX(b.datum)) || ' years ' ||
+    EXTRACT(MONTH FROM AGE(CURRENT_DATE, MAX(b.datum))) || ' mons ' ||
+    EXTRACT(DAY FROM AGE(CURRENT_DATE, MAX(b.datum))) || ' days' AS age
+FROM boetes AS b
+GROUP BY b.spelersnr
+ORDER BY MAX(b.bedrag) DESC, age ASC
+
+-----
