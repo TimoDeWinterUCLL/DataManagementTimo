@@ -1,0 +1,231 @@
+opgave:
+Geef voor alle spelers die geen penningmeester zijn of zijn geweest alle gewonnen wedstrijden, gesorteerd op wedstrijdnummer.
+
+output:
+spelersnr	wedstrijdnr
+44	4
+57	7
+104	10
+
+jouw antwoord:
+SELECT s.spelersnr, MIN(w.wedstrijdnr) AS wedstrijdnr
+FROM spelers s
+JOIN wedstrijden w USING(spelersnr) 
+WHERE s.spelersnr NOT IN (
+    SELECT spelersnr
+    FROM bestuursleden
+    WHERE functie = 'Penningmeester'
+) AND w.gewonnen > w.verloren
+GROUP BY s.spelersnr
+ORDER BY wedstrijdnr
+
+----
+
+opgave:
+Geef van elke speler het spelersnr, de naam en het verschil tussen zijn of haar jaar van toetreding en het gemiddeld jaar van toetreding van de spelers die in dezelfde plaats wonen. Sorteer op spelersnr. Toon 3 getallen na de komma, zet het verschil om naar het numeric type met precisie van 5 en een schaal van 3.
+
+output:
+spelersnr	naam	voorletters	numeric
+2	Elfring	R	-4.857
+6	Permentier	R	-2.857
+7	Wijers	GWS	1.143
+8	Niewenburg	B	0.000
+27	Cools	DD	-0.500
+28	Cools	C	0.000
+39	Bischoff	D	0.143
+44	Bakker, de	E	0.000
+57	Bohemen, van	M	5.143
+83	Hofland	PK	2.143
+95	Meuleman	P	0.000
+100	Permentier	P	-0.857
+104	Moerman	D	0.500
+112	Baalen, van	IP	0.000
+
+
+jouw antwoord:
+SELECT s.spelersnr, s.naam, s.voorletters, cast(jaartoe - avg_jaartoe as numeric(5,3))
+FROM spelers s
+INNER JOIN (
+	SELECT AVG(jaartoe) AS avg_jaartoe, plaats
+	FROM spelers
+	GROUP BY plaats
+) AS avg_table USING(plaats)	
+GROUP BY s.spelersnr, s.naam, s.voorletters, avg_table.avg_jaartoe
+ORDER BY s.spelersnr
+
+----
+
+opgave:
+Je kan per speler berekenen hoeveel boetes die speler heeft gehad en wat het totaalbedrag per speler is. Pas nu deze querie aan zodat per verschillend aantal boetes wordt getoond hoe vaak dit aantal boetes voorkwam.Sorteer eerst op de eerste kolom en daarna op de tweede kolom.
+
+
+output:
+a	count
+1	3
+2	1
+3	1
+
+
+jouw antwoord:
+SELECT betalinghoeveelheid AS a, count(spelersnr) as count
+FROM (
+	SELECT spelersnr, count(betalingsnr) as betalinghoeveelheid
+	FROM boetes
+	GROUP BY spelersnr
+) AS boetes_per_speler
+GROUP BY a
+ORDER BY count DESC
+
+----
+
+opgave:
+Geef van alle spelers het verschil tussen het jaar van toetreding en het geboortejaar, maar geef alleen die spelers waarvan dat verschil groter is dan 20. Sorteer deze gegevens beginnend bij de eerste kolom, eindigend bij de laatste kolom.
+
+
+output:
+spelersnr	naam	voorletters	toetredingsleeftijd
+2	Elfring	R	27
+39	Bischoff	D	24
+83	Hofland	PK	26
+112	Baalen, van	IP	21
+
+
+jouw antwoord:
+SELECT spelersnr, naam, voorletters,
+	jaartoe - EXTRACT(YEAR FROM geb_datum) AS toetredingsleeftijd
+FROM spelers
+WHERE jaartoe - EXTRACT(YEAR FROM geb_datum) > 20
+ORDER BY 1,2,3,4
+
+----
+
+opgave:
+Geef voor elke aanvoerder het spelersnr, de naam en het aantal boetes dat voor hem of haar betaald is en het aantal teams dat hij of zij aanvoert. Aanvoerders zonder boetes mogen niet getoond worden. Sorteer, beginnend bij de eerste kolom, eindigend bij de laatste kolom.
+
+
+output:
+spelersnr	naam	voorletters	aantalboetes	aantalteams
+6	Permentier	R	1	1
+27	Cools	DD	2	1
+
+
+jouw antwoord:
+select spelersnr, naam, voorletters, aantalboetes, aantalteams
+from spelers
+       inner join (select count(*) as aantalboetes, spelersnr from boetes group by spelersnr) as t using (spelersnr)
+       inner join (select count(*) as aantalteams, spelersnr from teams group by spelersnr) as u using(spelersnr)
+order by 1,2,3,4
+
+----
+
+opgave:
+Geef van elke speler het spelersnr, de naam en het verschil tussen zijn of haar jaar van toetreding en het gemiddeld jaar van toetreding van de spelers die in dezelfde plaats wonen. Sorteer op spelersnr. Zet het berekende verschil om naar het datatype numeric met precisie 5 en schaal 3.
+
+
+output:
+spelersnr	naam	voorletters	numeric
+2	Elfring	R	-4.857
+6	Permentier	R	-2.857
+7	Wijers	GWS	1.143
+8	Niewenburg	B	0.000
+27	Cools	DD	-0.500
+28	Cools	C	0.000
+39	Bischoff	D	0.143
+44	Bakker, de	E	0.000
+57	Bohemen, van	M	5.143
+83	Hofland	PK	2.143
+95	Meuleman	P	0.000
+100	Permentier	P	-0.857
+104	Moerman	D	0.500
+112	Baalen, van	IP	0.000
+
+
+jouw antwoord:
+SELECT s.spelersnr, s.naam, s.voorletters, cast(jaartoe - avg_jaartoe as numeric(5,3))
+FROM spelers s
+INNER JOIN (
+	SELECT AVG(jaartoe) AS avg_jaartoe, plaats
+	FROM spelers
+	GROUP BY plaats
+) AS avg_table USING(plaats)	
+GROUP BY s.spelersnr, s.naam, s.voorletters, avg_table.avg_jaartoe
+ORDER BY s.spelersnr
+
+----
+
+opgave:
+Geef een lijst van alle spelers (spelersnr en woonplaats) die met minstens twee in dezelfde plaats wonen. Sorteer aflopend op woonplaats, daarna op spelersnr.
+
+
+output:
+spelersnr	plaats
+27	Zoetermeer
+104	Zoetermeer
+8	Rijswijk
+44	Rijswijk
+2	Den Haag
+6	Den Haag
+7	Den Haag
+39	Den Haag
+57	Den Haag
+83	Den Haag
+100	Den Haag
+
+
+jouw antwoord:
+SELECT DISTINCT s1.spelersnr, s1.plaats
+FROM spelers AS s1
+WHERE (
+    SELECT COUNT(plaats)
+    FROM spelers AS s2
+    WHERE s2.plaats = s1.plaats
+) > 1
+ORDER BY plaats DESC
+
+----
+
+opgave:
+Geef de spelersgegevens van de speler(s) met het hoogste bedrag (voor één boete, niet het totaalbedrag). Als twee spelers een even hoge boete gehad hebben, moeten beide spelers getoond worden (LIMIT is dus geen optie).
+Sorteer alfabetisch op naam en voorletters.
+
+
+output:
+spelersnr	voorletters	naam
+27	DD	Cools
+6	R	Permentier
+
+
+jouw antwoord:
+SELECT s.spelersnr, s.voorletters, s.naam
+FROM spelers AS s
+INNER JOIN boetes AS b ON s.spelersnr = b.spelersnr
+WHERE b.bedrag = (
+    SELECT MAX(bedrag) FROM boetes
+)
+ORDER BY s.naam, s.voorletters
+
+----
+
+opgave:
+We willen een statistiek van hoeveel wedstrijden de spelers winnen.
+Geef een lijst met aantal gewonnen wedstrijden en het aantal spelers dat dit aantal wedstrijden gewonnen heeft.
+Dus bv als er vier spelers zijn die elk drie wedstrijden hebben gewonnen, dan is de output: aantal_gewonnen: 3, aantal_spelers: 4. Dit graag voor alle aantallen gewonnen wedstrijden en alle spelers.
+Sorteer op aantal gewonnen wedstrijden.
+
+
+output:
+aantal_gewonnen	aantal_spelers
+1	4
+2	1
+
+
+jouw antwoord:
+SELECT aantal_gewonnen, COUNT(*) AS aantal_spelers
+FROM (
+    SELECT spelersnr, COUNT(*) AS aantal_gewonnen
+    FROM wedstrijden
+    WHERE gewonnen > verloren
+    GROUP BY spelersnr
+) AS subquery
+GROUP BY aantal_gewonnen
+ORDER BY aantal_gewonnen

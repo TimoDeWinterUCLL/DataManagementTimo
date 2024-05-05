@@ -1,0 +1,186 @@
+opgave:
+Op welke planeten verblijft men gemiddeld langer dan 2 dagen?
+Sorteer op objectnaam.
+
+output:
+objectnaam	avg
+Mars	9.0000000000000000
+
+jouw antwoord:
+SELECT h.objectnaam, AVG(b.verblijfsduur) AS avg
+FROM bezoeken AS b
+INNER JOIN hemelobjecten AS h USING (objectnaam)
+WHERE h.satellietvan = 'Zon'
+GROUP BY h.objectnaam
+HAVING AVG(b.verblijfsduur) > 2
+ORDER BY h.objectnaam;
+
+----
+
+opgave:
+Bereken voor de klant wiens naam begint met G en eindigt met s hoeveel hij in totaal al besteed heeft aan reizen.
+
+
+output:
+naam	sum
+Gates	77.65
+
+jouw antwoord:
+SELECT naam, SUM(prijs) AS sum
+FROM klanten
+INNER JOIN deelnames ON klanten.klantnr = deelnames.klantnr
+INNER JOIN reizen ON deelnames.reisnr = reizen.reisnr
+WHERE naam LIKE 'G%s' 
+GROUP BY naam;
+
+----
+
+opgave:
+Maak een lijst met een overzicht van de reizen met deelnemers. Geef per reis het aantal deelnemers van elke reis. Orden de lijst dalend op basis van het aantal deelnemers, als er eenzelfde aantal deelnemers is, moeten deze stijgend geordend worden volgens reisnummer.
+
+output:
+reisnr	deelnemers
+31	4
+32	3
+33	3
+34	3
+
+jouw antwoord:
+SELECT reisnr, count(klantnr) AS deelnemers
+from deelnames
+group by reisnr
+order by deelnemers desc
+
+----
+
+opgave:
+Geef een lijst van alle reizen met tenminste 1 bezoek of passage aan de Maan of aan Mars. De lijst moet stijgend gesorteerd zijn op basis van het vertrekdatum.
+
+output:
+reisnr	vertrekdatum
+31	2020-06-02
+32	2020-06-03
+33	2020-10-12
+34	2021-01-10
+35	2021-03-12
+36	2021-06-27
+
+jouw antwoord:
+SELECT reisnr, vertrekdatum
+FROM reizen
+INNER JOIN bezoeken USING(reisnr)
+WHERE objectnaam = 'Maan' OR objectnaam = 'Mars'
+GROUP BY reizen.reisnr, reizen.vertrekdatum
+ORDER BY vertrekdatum ASC
+
+----
+
+opgave:
+Maak een lijst met een overzicht van de reizen en het aantal deelnemers van elke reis. Orden de lijst dalend op basis van het aantal deelnemers, als er eenzelfde aantal deelnemers is, moeten deze stijgend geordend worden volgens reisnummer.
+Zorg dat reizen zonder deelnames ook in het resultaat staan.
+
+output:
+reisnr	deelnemers
+31	4
+32	3
+33	3
+34	3
+35	0
+36	0
+
+jouw antwoord:
+SELECT r.reisnr, COUNT(d.reisnr) AS deelnemers
+FROM reizen AS r
+LEFT OUTER JOIN deelnames AS d ON r.reisnr = d.reisnr
+GROUP BY r.reisnr
+ORDER BY reisnr ASC
+
+----
+
+opgave:
+Welke reizen hebben exact drie verschillende hemelobjecten als reisdoel?
+Sorteer op reisnr.
+
+output:
+reisnr
+34
+36
+
+jouw antwoord:
+SELECT reisnr
+FROM bezoeken
+GROUP BY reisnr
+HAVING COUNT(DISTINCT objectnaam) = 3
+
+----
+
+opgave:
+Welke klanten (klantnaam, geboortedatum) zijn op een ruimtereis vertrokken in het jaar dat ze 45 jaar geworden zijn?
+Het resultaat moet stijgend gesorteerd worden op de geboortedatum.
+
+
+output:
+klantnaam	geboortedatum
+Van Rossem	1975-01-12
+Hassoui	1975-06-12
+Ellison	1975-10-10
+
+
+jouw antwoord:
+SELECT kla.naam AS klantnaam, geboortedatum
+FROM klanten AS kla
+LEFT OUTER JOIN deelnames AS d on kla.klantnr = d.klantnr
+INNER JOIN reizen AS r on d.reisnr = r.reisnr
+WHERE EXTRACT(YEAR FROM r.vertrekdatum) = 45 + EXTRACT(YEAR FROM kla.geboortedatum)
+GROUP BY klantnaam, geboortedatum
+ORDER BY geboortedatum
+
+----
+
+opgave:
+Bereken voor alle hemelobjecten die satellieten hebben, het aantal satellieten per hemelobject.
+De lijst moet dalend gesorteerd worden op basis van het aantal satellieten van de hemelobjecten en daarna alfabetisch op basis van objectnaam.
+
+output:
+objectnaam	count
+Saturnus	18
+Jupiter	16
+Uranus	15
+Zon	9
+Neptunus	8
+Mars	2
+Aarde	1
+Pluto	1
+
+
+jouw antwoord:
+SELECT o1.objectnaam, COUNT(o2.objectnaam) AS count
+FROM hemelobjecten AS o1
+INNER JOIN hemelobjecten AS o2 ON o1.objectnaam = o2.satellietvan
+GROUP BY o1.objectnaam
+ORDER BY count DESC, o1.objectnaam
+
+----
+
+opgave:
+Geef per klant het totaal aantal reizen waaraan deze klant zal deelnemen en het langste bezoek dat deze klant zal maken aan een hemelobject, over alle reizen heen.
+Klanten zonder reizen of zonder bezoeken moeten ook voorkomen in het overzicht.
+Sorteer op klantnr.
+
+output:
+klantnr	aantal	langstebezoek
+121	3	8
+122	2	14
+123	2	7
+124	2	7
+125	2	14
+126	2	14
+
+jouw antwoord:
+SELECT kla.klantnr, COUNT(DISTINCT d.reisnr) AS aantal, MAX(b.verblijfsduur) AS langstebezoek
+FROM klanten AS kla
+LEFT JOIN deelnames AS d ON kla.klantnr = d.klantnr
+LEFT JOIN bezoeken AS b ON d.reisnr = b.reisnr
+GROUP BY kla.klantnr
+ORDER BY kla.klantnr
+
